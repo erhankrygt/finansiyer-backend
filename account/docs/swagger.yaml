@@ -17,6 +17,13 @@ definitions:
                 x-go-name: Ping
         type: object
         x-go-package: github.com/erhankrygt/finansiyer-backend/account/docs
+    loginData:
+        properties:
+            isSuccessful:
+                type: boolean
+                x-go-name: IsSuccessful
+        type: object
+        x-go-package: github.com/erhankrygt/finansiyer-backend/account/docs
     registerData:
         properties:
             isSuccessful:
@@ -29,6 +36,27 @@ info:
     title: finansiyer Service API.
     version: 1.0.0
 paths:
+    /account/login:
+        get:
+            description: Returns response of login result
+            operationId: loginRequest
+            parameters:
+                - example: "5398883322"
+                  in: header
+                  name: phoneNumber
+                  required: true
+                  type: string
+                  x-go-name: PhoneNumber
+                - example: "123123123"
+                  in: header
+                  name: password
+                  required: true
+                  type: string
+                  x-go-name: Password
+            responses:
+                "200":
+                    $ref: '#/responses/loginResponse'
+            summary: Login
     /account/register:
         post:
             description: Returns response of register result
@@ -60,7 +88,7 @@ paths:
                             type: string
                             x-go-name: Password
                         phoneNumber:
-                            example: 539xxxxxxx
+                            example: "5398883322"
                             type: string
                             x-go-name: PhoneNumber
                     type: object
@@ -88,6 +116,15 @@ responses:
                 result:
                     type: string
                     x-go-name: Result
+            type: object
+    loginResponse:
+        description: Success
+        schema:
+            properties:
+                data:
+                    $ref: '#/definitions/loginData'
+                result:
+                    $ref: '#/definitions/apiError'
             type: object
     registerResponse:
         description: Success

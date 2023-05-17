@@ -8,6 +8,7 @@ import (
 type Service interface {
 	Health(context.Context, HealthRequest) HealthResponse
 	Register(context.Context, RegisterRequest) RegisterResponse
+	Login(context.Context, LoginRequest) LoginResponse
 }
 
 // Request defines behaviors of request
@@ -20,12 +21,14 @@ type Response interface{}
 var (
 	_ Request = (*HealthRequest)(nil)
 	_ Request = (*RegisterRequest)(nil)
+	_ Request = (*LoginRequest)(nil)
 )
 
 // compile-time proofs of response interface implementation
 var (
 	_ Response = (*HealthResponse)(nil)
 	_ Response = (*RegisterResponse)(nil)
+	_ Response = (*LoginResponse)(nil)
 )
 
 // HealthRequest and HealthResponse represents health request and response
@@ -63,7 +66,24 @@ type (
 	}
 )
 
+// LoginRequest and LoginResponse represents login request and response
+type (
+	LoginRequest struct {
+		PhoneNumber string `json:"phoneNumber" validate:"required"`
+		Password    string `json:"password" validate:"required"`
+	}
+
+	LoginResponse struct {
+		Data   *LoginData `json:"data"`
+		Result *ApiError  `json:"result,omitempty"`
+	}
+
+	LoginData struct {
+		IsSuccessful bool `json:"isSuccessful"`
+	}
+)
+
 type ApiError struct {
 	Code    int
-	Message string
+	Message *error
 }

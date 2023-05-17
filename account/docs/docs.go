@@ -43,7 +43,7 @@ type registerRequest struct {
 		LastName string `json:"lastName"`
 		// example: john@finansiyer.com
 		Email string `json:"email"`
-		// example: 539xxxxxxx
+		// example: 5398883322
 		PhoneNumber string `json:"phoneNumber"`
 		// example: 12345678
 		Password string `json:"password"`
@@ -66,7 +66,34 @@ type registerData struct {
 	IsSuccessful bool `json:"isSuccessful"`
 }
 
+// swagger:parameters loginRequest
+type loginRequest struct {
+	// required: true
+	// in: header
+	// example: 5398883322
+	PhoneNumber string `json:"phoneNumber"`
+
+	// required: true
+	// in: header
+	// example: 123123123
+	Password string `json:"password"`
+}
+
+// Success
+// swagger:response loginResponse
+type loginResponse struct {
+	// in:body
+	Body struct {
+		Data   *loginData `json:"data"`
+		Result *apiError  `json:"result,omitempty"`
+	}
+}
+
+type loginData struct {
+	IsSuccessful bool `json:"isSuccessful"`
+}
+
 type apiError struct {
 	Code    int
-	Message string
+	Message *error
 }

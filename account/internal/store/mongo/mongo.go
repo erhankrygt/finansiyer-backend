@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	envvars "github.com/erhankrygt/finansiyer-backend/account/configs/env-vars"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -20,13 +21,16 @@ const (
 
 // errors
 var (
-	ErrInsertingUser = errors.New("inserting user failed")
+	ErrInsertingUser    = errors.New("inserting user failed")
+	ErrNoDocumentsFound = errors.New("no documents found")
 )
 
 // Store defines behaviors of mongo store
 type Store interface {
 	Close() error
 	InsertUser(ctx context.Context, u User) (bool, error)
+	Login(ctx context.Context, f LoginFilter) (c *User, err error)
+	GetUser(ctx context.Context, p string) (c *User, err error)
 }
 
 // store represents mongo store
@@ -94,6 +98,39 @@ func (s *store) InsertUser(ctx context.Context, u User) (bool, error) {
 	u.ID = res.InsertedID.(primitive.ObjectID)
 
 	return true, nil
+}
+
+func (s *store) Login(ctx context.Context, f LoginFilter) (c *User, err error) {
+	ctx, cf := context.WithTimeout(ctx, s.readTimeout)
+	defer cf()
+
+	filter := bson.M{
+		"phonenumber": f.PhoneNumber,
+		"password":    f.Password,
+	}
+
+	err = s.db.Collection(userCollection).FindOne(ctx, filter).Decode(&c)
+	if err == mongo.ErrNoDocuments {
+		err = ErrNoDocumentsFound
+	}
+
+	return
+}
+
+func (s *store) GetUser(ctx context.Context, p string) (c *User, err error) {
+	ctx, cf := context.WithTimeout(ctx, s.readTimeout)
+	defer cf()
+
+	filter := bson.M{
+		"phonenumber": p,
+	}
+
+	err = s.db.Collection(userCollection).FindOne(ctx, filter).Decode(&c)
+	if err == mongo.ErrNoDocuments {
+		err = ErrNoDocumentsFound
+	}
+
+	return
 }
 
 // Close disconnects underlying mongo client

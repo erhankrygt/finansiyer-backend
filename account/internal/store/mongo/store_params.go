@@ -13,3 +13,8 @@ type User struct {
 	Password    string
 	CreatedAt   primitive.DateTime
 }
+
+type LoginFilter struct {
+	PhoneNumber string
+	Password    string
+}

@@ -5,6 +5,7 @@ import (
 	"github.com/erhankrygt/finansiyer-backend/account"
 	mongostore "github.com/erhankrygt/finansiyer-backend/account/internal/store/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"time"
 
@@ -65,18 +66,45 @@ func (s *RestService) Register(ctx context.Context, req account.RegisterRequest)
 			Data: nil,
 			Result: &account.ApiError{
 				Code:    http.StatusBadRequest,
-				Message: err.Error(),
+				Message: &err,
+			},
+		}
+	}
+
+	has, err := s.ms.GetUser(ctx, req.PhoneNumber)
+	if err != nil {
+		// TODO: Log with Sentry
+	}
+
+	if has != nil {
+		return account.RegisterResponse{
+			Data: nil,
+			Result: &account.ApiError{
+				Code:    http.StatusBadRequest,
+				Message: &ErrAlreadyUsedPhoneNumber,
 			},
 		}
 	}
 
 	if v {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			// TODO: Log with Sentry
+			return account.RegisterResponse{
+				Data: nil,
+				Result: &account.ApiError{
+					Code:    http.StatusBadRequest,
+					Message: &err,
+				},
+			}
+		}
+
 		u := mongostore.User{
 			FirstName:   req.FirstName,
 			LastName:    req.LastName,
 			PhoneNumber: req.PhoneNumber,
 			Email:       req.Email,
-			Password:    req.Password,
+			Password:    string(hashedPassword),
 			CreatedAt:   getCreatedAt(),
 		}
 
@@ -88,7 +116,7 @@ func (s *RestService) Register(ctx context.Context, req account.RegisterRequest)
 				Data: nil,
 				Result: &account.ApiError{
 					Code:    http.StatusBadRequest,
-					Message: err.Error(),
+					Message: &err,
 				},
 			}
 		}
@@ -97,6 +125,43 @@ func (s *RestService) Register(ctx context.Context, req account.RegisterRequest)
 	return account.RegisterResponse{
 		Data: &account.RegisterData{
 			IsSuccessful: v,
+		},
+	}
+}
+
+// Login returns login
+// swagger:operation GET /account/login loginRequest
+// ---
+// summary: Login
+// description: Returns response of login result
+// responses:
+//
+//	  200:
+//		  $ref: "#/responses/loginResponse"
+func (s *RestService) Login(ctx context.Context, req account.LoginRequest) account.LoginResponse {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+
+	filter := mongostore.LoginFilter{
+		PhoneNumber: req.PhoneNumber,
+		Password:    string(hashedPassword),
+	}
+
+	_, err := s.ms.Login(ctx, filter)
+	if err != nil {
+		// TODO: Log with Sentry
+
+		return account.LoginResponse{
+			Data: nil,
+			Result: &account.ApiError{
+				Code:    http.StatusBadRequest,
+				Message: &err,
+			},
+		}
+	}
+
+	return account.LoginResponse{
+		Data: &account.LoginData{
+			IsSuccessful: true,
 		},
 	}
 }

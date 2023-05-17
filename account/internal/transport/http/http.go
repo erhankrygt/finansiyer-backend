@@ -23,6 +23,7 @@ import (
 const (
 	health   = "Health"
 	register = "Register"
+	login    = "Login"
 )
 
 // decoder tags
@@ -50,6 +51,11 @@ func MakeHTTPHandler(l log.Logger, s account.Service) http.Handler {
 	// register POST /register
 	accountRouter.Methods(http.MethodPost).Path("/register").Handler(
 		makeRegisterhHandler(es.RegisterEndpoint, makeDefaultServerOptions(l, register)),
+	)
+
+	// login GET /login
+	accountRouter.Methods(http.MethodGet).Path("/login").Handler(
+		makeLoginhHandler(es.LoginEndpoint, makeDefaultServerOptions(l, login)),
 	)
 
 	// services docs
@@ -86,6 +92,12 @@ func makeHealthHandler(e endpoint.Endpoint, serverOptions []kithttp.ServerOption
 
 func makeRegisterhHandler(e endpoint.Endpoint, serverOptions []kithttp.ServerOption) http.Handler {
 	h := kithttp.NewServer(e, makeDecoder(account.RegisterRequest{}), encoder, serverOptions...)
+
+	return h
+}
+
+func makeLoginhHandler(e endpoint.Endpoint, serverOptions []kithttp.ServerOption) http.Handler {
+	h := kithttp.NewServer(e, makeDecoder(account.LoginRequest{}), encoder, serverOptions...)
 
 	return h
 }
