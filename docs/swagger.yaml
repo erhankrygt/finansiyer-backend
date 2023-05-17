@@ -1,0 +1,40 @@
+consumes:
+    - application/json
+definitions:
+    healthData:
+        properties:
+            ping:
+                type: string
+                x-go-name: Ping
+        type: object
+        x-go-package: finansiyer/docs
+info:
+    description: Documentation for finansiyer Service API
+    title: finansiyer Service API.
+    version: 1.0.0
+paths:
+    /health:
+        get:
+            description: Returns response of health result
+            operationId: healthRequest
+            responses:
+                "200":
+                    $ref: '#/responses/healthResponse'
+            summary: Health
+produces:
+    - application/json
+responses:
+    healthResponse:
+        description: Success
+        schema:
+            properties:
+                data:
+                    $ref: '#/definitions/healthData'
+                result:
+                    type: string
+                    x-go-name: Result
+            type: object
+schemes:
+    - https
+    - http
+swagger: "2.0"
