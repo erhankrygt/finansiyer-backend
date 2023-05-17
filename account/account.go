@@ -34,7 +34,7 @@ type (
 
 	HealthResponse struct {
 		Data   *HealthData `json:"data"`
-		Result string      `json:"result,omitempty"`
+		Result *ApiError   `json:"result,omitempty"`
 	}
 
 	HealthData struct {
@@ -45,19 +45,25 @@ type (
 // RegisterRequest and RegisterResponse represents register request and response
 type (
 	RegisterRequest struct {
-		FirstName       string `json:"firstName"`
-		LastName        string `json:"lastName"`
-		PhoneNumber     string `json:"phoneNumber"`
-		Password        string `json:"password"`
-		ConfirmPassword string `json:"confirmPassword"`
+		FirstName       string `json:"firstName" validate:"required"`
+		LastName        string `json:"lastName" validate:"required"`
+		Email           string `json:"email" validate:"required"`
+		PhoneNumber     string `json:"phoneNumber" validate:"required"`
+		Password        string `json:"password" validate:"required"`
+		ConfirmPassword string `json:"confirmPassword" validate:"required"`
 	}
 
 	RegisterResponse struct {
 		Data   *RegisterData `json:"data"`
-		Result string        `json:"result,omitempty"`
+		Result *ApiError     `json:"result,omitempty"`
 	}
 
 	RegisterData struct {
-		IsSuccessful string `json:"isSuccessful"`
+		IsSuccessful bool `json:"isSuccessful"`
 	}
 )
+
+type ApiError struct {
+	Code    int
+	Message string
+}

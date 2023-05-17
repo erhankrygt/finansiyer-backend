@@ -1,6 +1,7 @@
 package mockmongostore
 
 import (
+	"context"
 	mongostore "github.com/erhankrygt/finansiyer-backend/account/internal/store/mongo"
 	"github.com/stretchr/testify/mock"
 )
@@ -17,6 +18,12 @@ type Store struct {
 func NewStore() *Store {
 	return &Store{}
 }
+
+func (s Store) InsertUser(ctx context.Context, u mongostore.User) (bool, error) {
+	args := s.Called(ctx, u)
+	return args.Get(0).(bool), args.Error(1)
+}
+
 
 // Close mocks close method
 func (s Store) Close() error {

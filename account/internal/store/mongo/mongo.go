@@ -2,8 +2,10 @@ package mongostore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	envvars "github.com/erhankrygt/finansiyer-backend/account/configs/env-vars"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -12,14 +14,19 @@ import (
 )
 
 // collections
-const ()
+const (
+	userCollection = "users"
+)
 
 // errors
-var ()
+var (
+	ErrInsertingUser = errors.New("inserting user failed")
+)
 
 // Store defines behaviors of mongo store
 type Store interface {
 	Close() error
+	InsertUser(ctx context.Context, u User) (bool, error)
 }
 
 // store represents mongo store
@@ -71,6 +78,22 @@ func NewStore(m envvars.Mongo) (Store, error) {
 	s.db = c.Database(s.database)
 
 	return s, nil
+}
+
+func (s *store) InsertUser(ctx context.Context, u User) (bool, error) {
+	d := s.db.Collection(userCollection)
+
+	wctx, wcf := context.WithTimeout(ctx, s.writeTimeout)
+	defer wcf()
+
+	res, err := d.InsertOne(wctx, u)
+	if err != nil {
+		return false, ErrInsertingUser
+	}
+
+	u.ID = res.InsertedID.(primitive.ObjectID)
+
+	return true, nil
 }
 
 // Close disconnects underlying mongo client

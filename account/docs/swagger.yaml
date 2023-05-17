@@ -1,6 +1,15 @@
 consumes:
     - application/json
 definitions:
+    apiError:
+        properties:
+            Code:
+                format: int64
+                type: integer
+            Message:
+                type: string
+        type: object
+        x-go-package: github.com/erhankrygt/finansiyer-backend/account/docs
     healthData:
         properties:
             ping:
@@ -8,11 +17,57 @@ definitions:
                 x-go-name: Ping
         type: object
         x-go-package: github.com/erhankrygt/finansiyer-backend/account/docs
+    registerData:
+        properties:
+            isSuccessful:
+                type: boolean
+                x-go-name: IsSuccessful
+        type: object
+        x-go-package: github.com/erhankrygt/finansiyer-backend/account/docs
 info:
     description: Documentation for finansiyer Service API
     title: finansiyer Service API.
     version: 1.0.0
 paths:
+    /account/register:
+        post:
+            description: Returns response of register result
+            operationId: registerRequest
+            parameters:
+                - in: body
+                  name: Body
+                  required: true
+                  schema:
+                    properties:
+                        confirmPassword:
+                            example: "12345678"
+                            type: string
+                            x-go-name: ConfirmPassword
+                        email:
+                            example: john@finansiyer.com
+                            type: string
+                            x-go-name: Email
+                        firstName:
+                            example: John
+                            type: string
+                            x-go-name: FirstName
+                        lastName:
+                            example: Doe
+                            type: string
+                            x-go-name: LastName
+                        password:
+                            example: "12345678"
+                            type: string
+                            x-go-name: Password
+                        phoneNumber:
+                            example: 539xxxxxxx
+                            type: string
+                            x-go-name: PhoneNumber
+                    type: object
+            responses:
+                "200":
+                    $ref: '#/responses/registerResponse'
+            summary: Register
     /health:
         get:
             description: Returns response of health result
@@ -33,6 +88,15 @@ responses:
                 result:
                     type: string
                     x-go-name: Result
+            type: object
+    registerResponse:
+        description: Success
+        schema:
+            properties:
+                data:
+                    $ref: '#/definitions/registerData'
+                result:
+                    $ref: '#/definitions/apiError'
             type: object
 schemes:
     - https

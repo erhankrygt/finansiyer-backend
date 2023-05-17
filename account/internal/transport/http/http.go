@@ -21,7 +21,8 @@ import (
 
 // endpoint names
 const (
-	health = "Health"
+	health   = "Health"
+	register = "Register"
 )
 
 // decoder tags
@@ -45,6 +46,11 @@ func MakeHTTPHandler(l log.Logger, s account.Service) http.Handler {
 
 	// account router
 	accountRouter := r.PathPrefix("/account/").Subrouter()
+
+	// register POST /register
+	accountRouter.Methods(http.MethodPost).Path("/register").Handler(
+		makeRegisterhHandler(es.RegisterEndpoint, makeDefaultServerOptions(l, register)),
+	)
 
 	// services docs
 	// swagger router
@@ -74,6 +80,12 @@ func MakeHTTPHandler(l log.Logger, s account.Service) http.Handler {
 
 func makeHealthHandler(e endpoint.Endpoint, serverOptions []kithttp.ServerOption) http.Handler {
 	h := kithttp.NewServer(e, makeDecoder(account.HealthRequest{}), encoder, serverOptions...)
+
+	return h
+}
+
+func makeRegisterhHandler(e endpoint.Endpoint, serverOptions []kithttp.ServerOption) http.Handler {
+	h := kithttp.NewServer(e, makeDecoder(account.RegisterRequest{}), encoder, serverOptions...)
 
 	return h
 }
