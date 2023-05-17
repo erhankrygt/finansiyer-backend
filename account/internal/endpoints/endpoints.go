@@ -9,12 +9,14 @@ import (
 // Endpoints represents service endpoints
 type Endpoints struct {
 	HealthEndpoint endpoint.Endpoint
+	RegisterEndpoint endpoint.Endpoint
 }
 
 // MakeEndpoints makes and returns endpoints
 func MakeEndpoints(s account.Service) Endpoints {
 	return Endpoints{
 		HealthEndpoint: MakeHealthEndpoint(s),
+		RegisterEndpoint : MakeRegisterEndpoint(s),
 	}
 }
 
@@ -24,6 +26,17 @@ func MakeHealthEndpoint(s account.Service) endpoint.Endpoint {
 		req := request.(*account.HealthRequest)
 
 		res := s.Health(ctx, *req)
+
+		return res, nil
+	}
+}
+
+// MakeRegisterEndpoint makes and returns register endpoint
+func MakeRegisterEndpoint(s account.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(*account.RegisterRequest)
+
+		res := s.Register(ctx, *req)
 
 		return res, nil
 	}

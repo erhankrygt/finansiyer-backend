@@ -43,3 +43,8 @@ func (s *RestService) Health(_ context.Context, _ account.HealthRequest) account
 		},
 	}
 }
+
+func (s *RestService) Register(ctx context.Context, req account.RegisterRequest) account.RegisterResponse {
+	//TODO implement me
+	panic("implement me")
+}
