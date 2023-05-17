@@ -7,7 +7,7 @@ definitions:
                 type: string
                 x-go-name: Ping
         type: object
-        x-go-package: finansiyer/docs
+        x-go-package: github.com/erhankrygt/finansiyer-backend/account/docs
 info:
     description: Documentation for finansiyer Service API
     title: finansiyer Service API.

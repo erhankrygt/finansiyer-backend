@@ -2,7 +2,7 @@ package endpoints
 
 import (
 	"context"
-	"finansiyer"
+	"github.com/erhankrygt/finansiyer-backend/account"
 	"github.com/go-kit/kit/endpoint"
 )
 
@@ -12,16 +12,16 @@ type Endpoints struct {
 }
 
 // MakeEndpoints makes and returns endpoints
-func MakeEndpoints(s finansiyer.Service) Endpoints {
+func MakeEndpoints(s account.Service) Endpoints {
 	return Endpoints{
 		HealthEndpoint: MakeHealthEndpoint(s),
 	}
 }
 
 // MakeHealthEndpoint makes and returns health endpoint
-func MakeHealthEndpoint(s finansiyer.Service) endpoint.Endpoint {
+func MakeHealthEndpoint(s account.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(*finansiyer.HealthRequest)
+		req := request.(*account.HealthRequest)
 
 		res := s.Health(ctx, *req)
 

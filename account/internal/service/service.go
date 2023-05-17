@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
-	"finansiyer"
-	mongostore "finansiyer/internal/store/mongo"
+	"github.com/erhankrygt/finansiyer-backend/account"
+	mongostore "github.com/erhankrygt/finansiyer-backend/account/internal/store/mongo"
+
 	"github.com/go-kit/log"
 )
 
 // compile-time proofs of service interface implementation
-var _ finansiyer.Service = (*RestService)(nil)
+var _ account.Service = (*RestService)(nil)
 
 // RestService represents service
 type RestService struct {
@@ -18,7 +19,7 @@ type RestService struct {
 }
 
 // NewService creates and returns service
-func NewService(l log.Logger, ms mongostore.Store, env string) finansiyer.Service {
+func NewService(l log.Logger, ms mongostore.Store, env string) account.Service {
 	return &RestService{
 		l:   l,
 		ms:  ms,
@@ -35,9 +36,9 @@ func NewService(l log.Logger, ms mongostore.Store, env string) finansiyer.Servic
 //
 //	  200:
 //		  $ref: "#/responses/healthResponse"
-func (s *RestService) Health(_ context.Context, _ finansiyer.HealthRequest) finansiyer.HealthResponse {
-	return finansiyer.HealthResponse{
-		Data: &finansiyer.HealthData{
+func (s *RestService) Health(_ context.Context, _ account.HealthRequest) account.HealthResponse {
+	return account.HealthResponse{
+		Data: &account.HealthData{
 			Ping: "pong",
 		},
 	}

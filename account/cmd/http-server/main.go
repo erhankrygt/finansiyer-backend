@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"errors"
-	"finansiyer"
-	envvars "finansiyer/configs/env-vars"
-	"finansiyer/internal/service"
-	mongostore "finansiyer/internal/store/mongo"
-	httptransport "finansiyer/internal/transport/http"
+	"github.com/erhankrygt/finansiyer-backend/account"
+	envvars "github.com/erhankrygt/finansiyer-backend/account/configs/env-vars"
+	"github.com/erhankrygt/finansiyer-backend/account/internal/service"
+	mongostore "github.com/erhankrygt/finansiyer-backend/account/internal/store/mongo"
+	httptransport "github.com/erhankrygt/finansiyer-backend/account/internal/transport/http"
 	"github.com/go-kit/log"
+
 	"net/http"
 	"os"
 	"os/signal"
@@ -41,7 +42,7 @@ func main() {
 		}
 	}
 
-	var s finansiyer.Service
+	var s account.Service
 	{
 		s = service.NewService(logger, mongo, env.Service.Environment)
 	}
@@ -51,11 +52,13 @@ func main() {
 		handler = httptransport.MakeHTTPHandler(log.With(logger, "transport", "http"), s)
 	}
 
+	port := ":27001"
+
 	// Rest Http Server struct with Handler and Addr
 	var httpServer *http.Server
 	{
 		httpServer = &http.Server{
-			Addr:    env.Service.ServiceBindIp + env.HTTPServer.RestAddress,
+			Addr:    env.Service.ServiceBindIp + port,
 			Handler: handler,
 		}
 	}
@@ -69,7 +72,7 @@ func main() {
 
 	// http Handler Serve with routine
 	go func() {
-		_ = logger.Log("transport", "http", "address", env.HTTPServer.RestAddress)
+		_ = logger.Log("transport", "http", "address", port)
 
 		err = httpServer.ListenAndServe()
 		if errors.Is(err, http.ErrServerClosed) {

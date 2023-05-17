@@ -1,4 +1,4 @@
-package finansiyer
+package account
 
 import (
 	"context"

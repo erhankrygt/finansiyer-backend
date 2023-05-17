@@ -1,7 +1,7 @@
 package mockmongostore
 
 import (
-	mongostore "finansiyer/internal/store/mongo"
+	mongostore "github.com/erhankrygt/finansiyer-backend/account/internal/store/mongo"
 	"github.com/stretchr/testify/mock"
 )
 

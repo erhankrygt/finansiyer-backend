@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"finansiyer"
-	"finansiyer/internal/endpoints"
-	"finansiyer/internal/transport"
 	"fmt"
+	"github.com/erhankrygt/finansiyer-backend/account"
+	"github.com/erhankrygt/finansiyer-backend/account/internal/endpoints"
+	"github.com/erhankrygt/finansiyer-backend/account/internal/transport"
 	"github.com/go-kit/kit/endpoint"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-kit/log"
@@ -33,7 +33,7 @@ const (
 const invalidResponseError = "invalid response"
 
 // MakeHTTPHandler makes and returns http handler
-func MakeHTTPHandler(l log.Logger, s finansiyer.Service) http.Handler {
+func MakeHTTPHandler(l log.Logger, s account.Service) http.Handler {
 	es := endpoints.MakeEndpoints(s)
 
 	r := mux.NewRouter()
@@ -43,9 +43,12 @@ func MakeHTTPHandler(l log.Logger, s finansiyer.Service) http.Handler {
 		makeHealthHandler(es.HealthEndpoint, makeDefaultServerOptions(l, health)),
 	)
 
+	// account router
+	accountRouter := r.PathPrefix("/account/").Subrouter()
+
 	// services docs
 	// swagger router
-	swaggerRouter := r.PathPrefix("/docs").Subrouter()
+	swaggerRouter := accountRouter.PathPrefix("/docs").Subrouter()
 
 	// swagger.yml
 	swaggerRouter.Methods(http.MethodGet).Path("/swagger.yaml").HandlerFunc(
@@ -58,8 +61,8 @@ func MakeHTTPHandler(l log.Logger, s finansiyer.Service) http.Handler {
 	swaggerRouter.Methods(http.MethodGet).Path("").HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			options := middleware.SwaggerUIOpts{
-				SpecURL: "/docs/swagger.yaml",
-				Path:    "/docs",
+				SpecURL: "/account/docs/swagger.yaml",
+				Path:    "/account/docs",
 			}
 
 			middleware.SwaggerUI(options, nil).ServeHTTP(w, r)
@@ -70,7 +73,7 @@ func MakeHTTPHandler(l log.Logger, s finansiyer.Service) http.Handler {
 }
 
 func makeHealthHandler(e endpoint.Endpoint, serverOptions []kithttp.ServerOption) http.Handler {
-	h := kithttp.NewServer(e, makeDecoder(finansiyer.HealthRequest{}), encoder, serverOptions...)
+	h := kithttp.NewServer(e, makeDecoder(account.HealthRequest{}), encoder, serverOptions...)
 
 	return h
 }
@@ -142,7 +145,7 @@ func validate(req interface{}) error {
 }
 
 func encoder(_ context.Context, rw http.ResponseWriter, response interface{}) error {
-	r, ok := response.(finansiyer.Response)
+	r, ok := response.(account.Response)
 	if !ok {
 		return errors.New(invalidResponseError)
 	}

@@ -2,8 +2,8 @@ package mongostore
 
 import (
 	"context"
-	envvars "finansiyer/configs/env-vars"
 	"fmt"
+	envvars "github.com/erhankrygt/finansiyer-backend/account/configs/env-vars"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"

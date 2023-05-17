@@ -1,4 +1,4 @@
-module finansiyer
+module github.com/erhankrygt/finansiyer-backend/account
 
 go 1.20
 
@@ -6,6 +6,7 @@ require (
 	github.com/codingconcepts/env v0.0.0-20200821220118-a8fbf8d84482
 	github.com/go-kit/kit v0.12.0
 	github.com/go-kit/log v0.2.0
+	github.com/go-openapi/runtime v0.26.0
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/gorilla/mux v1.8.0
 	github.com/iris-contrib/schema v0.0.6
@@ -24,7 +25,6 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/loads v0.21.2 // indirect
-	github.com/go-openapi/runtime v0.26.0 // indirect
 	github.com/go-openapi/spec v0.20.8 // indirect
 	github.com/go-openapi/strfmt v0.21.7 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
