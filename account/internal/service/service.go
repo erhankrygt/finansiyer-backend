@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/erhankrygt/finansiyer-backend/account"
+	envvars "github.com/erhankrygt/finansiyer-backend/account/configs/env-vars"
 	mongostore "github.com/erhankrygt/finansiyer-backend/account/internal/store/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
@@ -19,11 +21,11 @@ var _ account.Service = (*RestService)(nil)
 type RestService struct {
 	l   log.Logger
 	ms  mongostore.Store
-	env string
+	env envvars.EnvVars
 }
 
 // NewService creates and returns service
-func NewService(l log.Logger, ms mongostore.Store, env string) account.Service {
+func NewService(l log.Logger, ms mongostore.Store, env envvars.EnvVars) account.Service {
 	return &RestService{
 		l:   l,
 		ms:  ms,
@@ -58,7 +60,65 @@ func (s *RestService) Health(_ context.Context, _ account.HealthRequest) account
 //	  200:
 //		  $ref: "#/responses/registerResponse"
 func (s *RestService) Register(ctx context.Context, req account.RegisterRequest) account.RegisterResponse {
-	v, err := verifyPassword(req.Password, req.ConfirmPassword)
+	verify, _ := verifyPassword(req.Password, req.ConfirmPassword)
+	if verify == false {
+		return account.RegisterResponse{
+			Data: nil,
+			Result: &account.ApiError{
+				Code:    http.StatusBadRequest,
+				Message: &ErrPasswordsDoNotMatch,
+			},
+		}
+	}
+
+	user, err := s.ms.GetUser(ctx, req.PhoneNumber)
+	if err != nil {
+		// TODO: Log with Sentry
+	}
+
+	if user != nil {
+		return account.RegisterResponse{
+			Data: nil,
+			Result: &account.ApiError{
+				Code:    http.StatusBadRequest,
+				Message: &ErrAlreadyRegistered,
+			},
+		}
+	}
+
+	hashedPassword, err := hashPassword(req.Password)
+	if err != nil {
+		// TODO: Log with Sentry
+		return account.RegisterResponse{
+			Data: nil,
+			Result: &account.ApiError{
+				Code:    http.StatusBadRequest,
+				Message: &err,
+			},
+		}
+	}
+
+	claims := jwt.MapClaims{
+		"phonenumber": req.PhoneNumber,
+		"exp":         time.Now().Add(time.Hour * 24).Unix(),
+	}
+
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := t.SignedString([]byte("gizli_anahtar"))
+
+	u := mongostore.User{
+		FirstName:   req.FirstName,
+		LastName:    req.LastName,
+		PhoneNumber: req.PhoneNumber,
+		Email:       req.Email,
+		Password:    hashedPassword,
+		CreatedAt:   getCreatedAt(),
+		Token:       token,
+		IsActive:    true,
+		IsDeleted:   false,
+	}
+
+	_, err = s.ms.InsertUser(ctx, u)
 	if err != nil {
 		// TODO: Log with Sentry
 
@@ -71,60 +131,9 @@ func (s *RestService) Register(ctx context.Context, req account.RegisterRequest)
 		}
 	}
 
-	has, err := s.ms.GetUser(ctx, req.PhoneNumber)
-	if err != nil {
-		// TODO: Log with Sentry
-	}
-
-	if has != nil {
-		return account.RegisterResponse{
-			Data: nil,
-			Result: &account.ApiError{
-				Code:    http.StatusBadRequest,
-				Message: &ErrAlreadyUsedPhoneNumber,
-			},
-		}
-	}
-
-	if v {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-		if err != nil {
-			// TODO: Log with Sentry
-			return account.RegisterResponse{
-				Data: nil,
-				Result: &account.ApiError{
-					Code:    http.StatusBadRequest,
-					Message: &err,
-				},
-			}
-		}
-
-		u := mongostore.User{
-			FirstName:   req.FirstName,
-			LastName:    req.LastName,
-			PhoneNumber: req.PhoneNumber,
-			Email:       req.Email,
-			Password:    string(hashedPassword),
-			CreatedAt:   getCreatedAt(),
-		}
-
-		v, err = s.ms.InsertUser(ctx, u)
-		if err != nil {
-			// TODO: Log with Sentry
-
-			return account.RegisterResponse{
-				Data: nil,
-				Result: &account.ApiError{
-					Code:    http.StatusBadRequest,
-					Message: &err,
-				},
-			}
-		}
-	}
-
 	return account.RegisterResponse{
 		Data: &account.RegisterData{
-			IsSuccessful: v,
+			IsSuccessful: true,
 		},
 	}
 }
@@ -139,22 +148,25 @@ func (s *RestService) Register(ctx context.Context, req account.RegisterRequest)
 //	  200:
 //		  $ref: "#/responses/loginResponse"
 func (s *RestService) Login(ctx context.Context, req account.LoginRequest) account.LoginResponse {
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-
-	filter := mongostore.LoginFilter{
-		PhoneNumber: req.PhoneNumber,
-		Password:    string(hashedPassword),
-	}
-
-	_, err := s.ms.Login(ctx, filter)
+	user, err := s.ms.GetUser(ctx, req.PhoneNumber)
 	if err != nil {
 		// TODO: Log with Sentry
-
 		return account.LoginResponse{
 			Data: nil,
 			Result: &account.ApiError{
 				Code:    http.StatusBadRequest,
 				Message: &err,
+			},
+		}
+	}
+
+	err = comparePasswords(user.Password, req.Password)
+	if err != nil {
+		return account.LoginResponse{
+			Data: nil,
+			Result: &account.ApiError{
+				Code:    http.StatusBadRequest,
+				Message: &ErrLoginInformationInCorrect,
 			},
 		}
 	}
@@ -184,4 +196,16 @@ func verifyPassword(password, confirmPassword string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func hashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+func comparePasswords(hashedPassword, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }

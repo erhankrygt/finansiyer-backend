@@ -24,6 +24,10 @@ func (s Store) InsertUser(ctx context.Context, u mongostore.User) (bool, error) 
 	return args.Get(0).(bool), args.Error(1)
 }
 
+func (s Store) GetUser(ctx context.Context, p string) (c *mongostore.User, err error) {
+	args := s.Called(ctx, p)
+	return args.Get(0).(*mongostore.User), args.Error(1)
+}
 
 // Close mocks close method
 func (s Store) Close() error {

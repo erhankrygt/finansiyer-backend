@@ -11,6 +11,9 @@ type User struct {
 	PhoneNumber string
 	Email       string
 	Password    string
+	Token       string
+	IsActive    bool
+	IsDeleted   bool
 	CreatedAt   primitive.DateTime
 }
 

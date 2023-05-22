@@ -44,7 +44,7 @@ func main() {
 
 	var s account.Service
 	{
-		s = service.NewService(logger, mongo, env.Service.Environment)
+		s = service.NewService(logger, mongo, *env)
 	}
 
 	var handler http.Handler

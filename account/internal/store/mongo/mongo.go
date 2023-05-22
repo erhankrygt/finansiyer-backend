@@ -29,7 +29,6 @@ var (
 type Store interface {
 	Close() error
 	InsertUser(ctx context.Context, u User) (bool, error)
-	Login(ctx context.Context, f LoginFilter) (c *User, err error)
 	GetUser(ctx context.Context, p string) (c *User, err error)
 }
 
@@ -100,29 +99,13 @@ func (s *store) InsertUser(ctx context.Context, u User) (bool, error) {
 	return true, nil
 }
 
-func (s *store) Login(ctx context.Context, f LoginFilter) (c *User, err error) {
-	ctx, cf := context.WithTimeout(ctx, s.readTimeout)
-	defer cf()
-
-	filter := bson.M{
-		"phonenumber": f.PhoneNumber,
-		"password":    f.Password,
-	}
-
-	err = s.db.Collection(userCollection).FindOne(ctx, filter).Decode(&c)
-	if err == mongo.ErrNoDocuments {
-		err = ErrNoDocumentsFound
-	}
-
-	return
-}
-
 func (s *store) GetUser(ctx context.Context, p string) (c *User, err error) {
 	ctx, cf := context.WithTimeout(ctx, s.readTimeout)
 	defer cf()
 
 	filter := bson.M{
 		"phonenumber": p,
+		"isactive":    true,
 	}
 
 	err = s.db.Collection(userCollection).FindOne(ctx, filter).Decode(&c)
