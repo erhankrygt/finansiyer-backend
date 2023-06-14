@@ -53,7 +53,7 @@ func (s *RestService) Health(_ context.Context, _ wallet.HealthRequest) wallet.H
 //
 //	  200:
 //		  $ref: "#/responses/bankResponse"
-func (r RestService) GetBanks(ctx context.Context, request wallet.BankRequest) wallet.BankResponse {
+func (s *RestService) GetBanks(ctx context.Context, request wallet.BankRequest) wallet.BankResponse {
 	//TODO implement me
 	panic("implement me")
 }
