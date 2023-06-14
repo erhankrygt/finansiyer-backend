@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/erhankrygt/finansiyer-backend/account"
+	envvars "github.com/erhankrygt/finansiyer-backend/account/configs/env-vars"
 	mockmongostore "github.com/erhankrygt/finansiyer-backend/account/internal/mock/store/mongo"
 	"github.com/go-kit/log"
 	"os"
@@ -26,7 +27,7 @@ func TestHealth(t *testing.T) {
 	ms := mockmongostore.NewStore()
 	ctx := context.Background()
 
-	s := NewService(l, ms, "dev")
+	s := NewService(l, ms, envvars.EnvVars{})
 
 	if !reflect.DeepEqual(expectedRes, s.Health(ctx, req)) {
 		t.Errorf("expected response and response don't match, expected response: %+v", expectedRes)
