@@ -8,6 +8,11 @@ type Service interface {
 	GetBanks(context.Context, BankRequest) BankResponse
 }
 
+type Header struct {
+	UserID    string `json:"userID"`
+	UserToken string `json:"userToken"`
+}
+
 // Request defines behaviors of request
 type Request interface{}
 
@@ -40,7 +45,9 @@ type (
 
 // BankRequest and BankResponse represents bank request and response
 type (
-	BankRequest struct{}
+	BankRequest struct {
+		Header
+	}
 
 	BankResponse struct {
 		Data   *BankData `json:"data"`
@@ -48,6 +55,10 @@ type (
 	}
 
 	BankData struct {
+		Banks []Bank `json:"banks"`
+	}
+
+	Bank struct {
 		Title   string `json:"title"`
 		WebSite string `json:"webSite"`
 	}

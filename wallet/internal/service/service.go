@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/go-kit/log"
+	"net/http"
 	"wallet"
 	envvars "wallet/configs/env-vars"
 	mongostore "wallet/internal/store/mongo"
@@ -53,7 +54,34 @@ func (s *RestService) Health(_ context.Context, _ wallet.HealthRequest) wallet.H
 //
 //	  200:
 //		  $ref: "#/responses/bankResponse"
-func (s *RestService) GetBanks(ctx context.Context, request wallet.BankRequest) wallet.BankResponse {
-	//TODO implement me
-	panic("implement me")
+func (s *RestService) GetBanks(ctx context.Context, req wallet.BankRequest) wallet.BankResponse {
+
+	res := wallet.BankResponse{}
+
+	user := mongostore.User{
+		UserID: req.UserID,
+	}
+
+	bankList, err := s.ms.GetBanks(ctx, user)
+	if err != nil {
+		res.Result = &wallet.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: &err,
+		}
+	}
+
+	var banks []wallet.Bank
+
+	for _, b := range bankList {
+		banks = append(banks, wallet.Bank{
+			Title:   b.Title,
+			WebSite: b.WebSite,
+		})
+	}
+
+	res.Data = &wallet.BankData{
+		Banks: banks,
+	}
+
+	return res
 }

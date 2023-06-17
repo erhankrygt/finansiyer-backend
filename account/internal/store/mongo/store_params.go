@@ -6,6 +6,7 @@ import (
 
 type User struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	UserID      string
 	FirstName   string
 	LastName    string
 	PhoneNumber string

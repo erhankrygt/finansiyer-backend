@@ -2,7 +2,9 @@ package mongostore
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -14,10 +16,19 @@ import (
 // collections
 const (
 	userCollection = "users"
+	bankCollection = "banks"
+)
+
+// errors
+var (
+	ErrNoDocumentsFound       = errors.New("no documents found")
+	ErrDecodingDocumentRecord = errors.New("decoding document record failed")
+	ErrNotFoundDocument       = errors.New("not found document failed")
 )
 
 // Store defines behaviors of mongo store
 type Store interface {
+	GetBanks(ctx context.Context, u User) ([]Bank, error)
 	Close() error
 }
 
@@ -70,6 +81,32 @@ func NewStore(m envvars.Mongo) (Store, error) {
 	s.db = c.Database(s.database)
 
 	return s, nil
+}
+
+func (s store) GetBanks(ctx context.Context, u User) ([]Bank, error) {
+	d := s.db.Collection(bankCollection)
+
+	rctx, rcf := context.WithTimeout(ctx, s.readTimeout)
+	defer rcf()
+
+	res, err := d.Find(rctx, bson.M{})
+	if err != nil {
+		return nil, ErrDecodingDocumentRecord
+	}
+
+	dl := make([]Bank, 0)
+
+	for res.Next(rctx) {
+		doc := Bank{}
+		err = res.Decode(&doc)
+		if err != nil {
+			return nil, ErrNotFoundDocument
+		}
+
+		dl = append(dl, doc)
+	}
+
+	return dl, nil
 }
 
 func (s store) Close() error {
