@@ -45,6 +45,42 @@ func (s *RestService) Health(_ context.Context, _ wallet.HealthRequest) wallet.H
 	}
 }
 
+// CreateBank returns create bank
+// swagger:operation POST /create-bank createBankRequest
+// ---
+// summary: CreateBank
+// description: Returns response of create bank result
+// responses:
+//
+//	  200:
+//		  $ref: "#/responses/createBankResponse"
+func (s *RestService) CreateBank(ctx context.Context, req wallet.CreateBankRequest) wallet.CreateBankResponse {
+
+	res := wallet.CreateBankResponse{}
+
+	bank := mongostore.Bank{
+		Title:   req.Title,
+		WebSite: req.WebSite,
+		User: mongostore.User{
+			UserID: req.UserID,
+		},
+	}
+
+	success, err := s.ms.CreateBank(ctx, bank)
+	if err != nil {
+		res.Result = &wallet.ApiError{
+			Code:    http.StatusBadRequest,
+			Message: &err,
+		}
+	}
+
+	res.Data = &wallet.CreateBankData{
+		Success: success,
+	}
+
+	return res
+}
+
 // GetBanks returns banks
 // swagger:operation GET /banks bankRequest
 // ---
@@ -84,4 +120,9 @@ func (s *RestService) GetBanks(ctx context.Context, req wallet.BankRequest) wall
 	}
 
 	return res
+}
+
+func (s *RestService) CreateBankAccount(ctx context.Context, req wallet.CreateBankAccountRequest) wallet.CreateBankAccountResponse {
+	//TODO implement me
+	panic("implement me")
 }

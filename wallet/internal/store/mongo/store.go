@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -15,8 +16,9 @@ import (
 
 // collections
 const (
-	userCollection = "users"
-	bankCollection = "banks"
+	userCollection        = "users"
+	bankCollection        = "banks"
+	bankAccountCollection = "bankAccounts"
 )
 
 // errors
@@ -24,11 +26,14 @@ var (
 	ErrNoDocumentsFound       = errors.New("no documents found")
 	ErrDecodingDocumentRecord = errors.New("decoding document record failed")
 	ErrNotFoundDocument       = errors.New("not found document failed")
+	ErrBankCouldNotCreate     = errors.New("bank could not create")
 )
 
 // Store defines behaviors of mongo store
 type Store interface {
 	GetBanks(ctx context.Context, u User) ([]Bank, error)
+	CreateBank(ctx context.Context, b Bank) (bool, error)
+	CreateBankAccount(ctx context.Context, ba BankAccount) (bool, error)
 	Close() error
 }
 
@@ -107,6 +112,55 @@ func (s store) GetBanks(ctx context.Context, u User) ([]Bank, error) {
 	}
 
 	return dl, nil
+}
+
+func (s store) CreateBank(ctx context.Context, b Bank) (bool, error) {
+
+	c := s.db.Collection(bankCollection)
+
+	wctx, wcf := context.WithTimeout(ctx, s.writeTimeout)
+	defer wcf()
+
+	upc := Bank{
+		Title:     b.Title,
+		WebSite:   b.WebSite,
+		IsActive:  true,
+		IsDeleted: false,
+		CreatedAt: primitive.NewDateTimeFromTime(time.Now().UTC()),
+	}
+
+	_, err := c.InsertOne(wctx, upc)
+	if err != nil {
+		return false, ErrBankCouldNotCreate
+	}
+
+	return true, nil
+}
+
+func (s store) CreateBankAccount(ctx context.Context, ba BankAccount) (bool, error) {
+
+	c := s.db.Collection(bankAccountCollection)
+
+	wctx, wcf := context.WithTimeout(ctx, s.writeTimeout)
+	defer wcf()
+
+	upc := BankAccount{
+		Bank: Bank{
+			User: User{},
+		},
+		IBAN:          ba.IBAN,
+		AccountNumber: ba.AccountNumber,
+		IsActive:      true,
+		IsDeleted:     false,
+		CreatedAt:     primitive.NewDateTimeFromTime(time.Now().UTC()),
+	}
+
+	_, err := c.InsertOne(wctx, upc)
+	if err != nil {
+		return false, ErrBankCouldNotCreate
+	}
+
+	return true, nil
 }
 
 func (s store) Close() error {

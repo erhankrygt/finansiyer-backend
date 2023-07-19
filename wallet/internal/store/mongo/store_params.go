@@ -25,3 +25,13 @@ type Bank struct {
 	IsDeleted bool
 	CreatedAt primitive.DateTime
 }
+
+type BankAccount struct {
+	ID            primitive.ObjectID `bson:"_id,omitempty"`
+	Bank          Bank
+	IBAN          string
+	AccountNumber string
+	IsActive      bool
+	IsDeleted     bool
+	CreatedAt     primitive.DateTime
+}

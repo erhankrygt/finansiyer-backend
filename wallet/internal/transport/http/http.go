@@ -21,8 +21,9 @@ import (
 
 // endpoint names
 const (
-	health = "Health"
-	banks  = "Banks"
+	health     = "Health"
+	banks      = "Banks"
+	createBank = "CreateBank"
 )
 
 // decoder tags
@@ -50,6 +51,11 @@ func MakeHTTPHandler(l log.Logger, s wallet.Service) http.Handler {
 	// banks GET /banks
 	walletRouter.Methods(http.MethodGet).Path("/banks").Handler(
 		makeBanksHandler(es.BanksEndpoint, makeDefaultServerOptions(l, banks)),
+	)
+
+	// create-bank POST /create-bank
+	walletRouter.Methods(http.MethodPost).Path("/create-bank").Handler(
+		makeCreateBankHandler(es.CreateBankEndpoint, makeDefaultServerOptions(l, createBank)),
 	)
 
 	// services docs
@@ -86,6 +92,12 @@ func makeHealthHandler(e endpoint.Endpoint, serverOptions []kithttp.ServerOption
 
 func makeBanksHandler(e endpoint.Endpoint, serverOptions []kithttp.ServerOption) http.Handler {
 	h := kithttp.NewServer(e, makeDecoder(wallet.BankRequest{}), encoder, serverOptions...)
+
+	return h
+}
+
+func makeCreateBankHandler(e endpoint.Endpoint, serverOptions []kithttp.ServerOption) http.Handler {
+	h := kithttp.NewServer(e, makeDecoder(wallet.CreateBankRequest{}), encoder, serverOptions...)
 
 	return h
 }

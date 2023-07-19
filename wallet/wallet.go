@@ -5,7 +5,9 @@ import "context"
 // Service defines behaviors of sample service
 type Service interface {
 	Health(context.Context, HealthRequest) HealthResponse
+	CreateBank(context.Context, CreateBankRequest) CreateBankResponse
 	GetBanks(context.Context, BankRequest) BankResponse
+	CreateBankAccount(context.Context, CreateBankAccountRequest) CreateBankAccountResponse
 }
 
 type Header struct {
@@ -61,6 +63,43 @@ type (
 	Bank struct {
 		Title   string `json:"title"`
 		WebSite string `json:"webSite"`
+	}
+)
+
+// CreateBankRequest and CreateBankResponse represents create bank request and response
+type (
+	CreateBankRequest struct {
+		Header
+		Title   string `json:"title"`
+		WebSite string `json:"webSite"`
+	}
+
+	CreateBankResponse struct {
+		Data   *CreateBankData `json:"data"`
+		Result *ApiError       `json:"result,omitempty"`
+	}
+
+	CreateBankData struct {
+		Success bool `json:"success"`
+	}
+)
+
+// CreateBankAccountRequest and CreateBankAccountResponse represents create bank account request and response
+type (
+	CreateBankAccountRequest struct {
+		Header
+		BankID        string `json:"bankID"`
+		IBAN          string `json:"iban"`
+		AccountNumber string `json:"accountNumber"`
+	}
+
+	CreateBankAccountResponse struct {
+		Data   *CreateBankAccountData `json:"data"`
+		Result *ApiError              `json:"result,omitempty"`
+	}
+
+	CreateBankAccountData struct {
+		Success bool `json:"success"`
 	}
 )
 
