@@ -52,7 +52,7 @@ func main() {
 		handler = httptransport.MakeHTTPHandler(log.With(logger, "transport", "http"), s)
 	}
 
-	port := ":27002"
+	port := ":27003"
 
 	// Rest Http Server struct with Handler and Addr
 	var httpServer *http.Server
