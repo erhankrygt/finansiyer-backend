@@ -5,6 +5,7 @@ import "context"
 // Service defines behaviors of sample service
 type Service interface {
 	Health(context.Context, HealthRequest) HealthResponse
+	Blog(context.Context, BlogRequest) BlogResponse
 }
 
 // Request defines behaviors of request
@@ -33,6 +34,20 @@ type (
 	}
 
 	HealthData struct {
+		Ping string `json:"ping"`
+	}
+)
+
+// BlogRequest and BlogResponse represents blog request and response
+type (
+	BlogRequest struct{}
+
+	BlogResponse struct {
+		Data   *BlogData `json:"data"`
+		Result *ApiError `json:"result,omitempty"`
+	}
+
+	BlogData struct {
 		Ping string `json:"ping"`
 	}
 )

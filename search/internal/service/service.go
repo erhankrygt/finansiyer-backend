@@ -43,3 +43,17 @@ func (s *RestService) Health(_ context.Context, _ search.HealthRequest) search.H
 		},
 	}
 }
+
+// Blog returns blog
+// swagger:operation GET /blog blogRequest
+// ---
+// summary: Blog
+// description: Returns response of blog result
+// responses:
+//
+//	  200:
+//		  $ref: "#/responses/blogResponse"
+func (s *RestService) Blog(ctx context.Context, req search.BlogRequest) search.BlogResponse {
+	//TODO implement me
+	panic("implement me")
+}
